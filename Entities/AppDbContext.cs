@@ -12,6 +12,8 @@ namespace PatientManager.Api.Entities
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Visit> Visits { get; set; }
         public DbSet<VisitType> VisitTypes { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet <PatientTag> PatientTags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

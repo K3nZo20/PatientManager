@@ -44,6 +44,22 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+using var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetService<AppDbContext>();
+var employees = dbContext.Employees.ToList();
+
+if (!employees.Any())
+{
+    var user1 = new Employee()
+    {
+        FirstName = "Aleksandra",
+        LastName = "Martowicz",
+        Title = "Manager",
+        PhoneNumber = "123123123"
+    };
+    dbContext.Employees.Add(user1);
+    dbContext.SaveChanges();
+}
 
 app.Run();
 
