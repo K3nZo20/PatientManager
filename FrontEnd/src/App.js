@@ -22,7 +22,7 @@ function App() {
             <ul>
                 {patients.map(p => (
                     <li key={p.id}>
-                        {p.firstName} {p.lastName}
+                        {p.firstName} {p.lastName} {p.phoneNumber} {p.pesel} {p.dateOfBirth}
                     </li>
                 ))}
             </ul>

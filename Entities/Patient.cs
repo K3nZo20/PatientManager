@@ -8,5 +8,7 @@
         public string PhoneNumber { get; set; }
         public string Pesel {  get; set; }
         public DateTime DateOfBirth { get; set; }
+        public List<Visit> Visits { get; set; } = new List<Visit>();
+        public List<PatientTag> PatientTags { get; set; }
     }
 }
