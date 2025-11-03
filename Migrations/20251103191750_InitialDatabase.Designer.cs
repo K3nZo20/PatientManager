@@ -12,8 +12,8 @@ using PatientManager.Api.Entities;
 namespace PatientManager.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251028182526_TablesNamesFix")]
-    partial class TablesNamesFix
+    [Migration("20251103191750_InitialDatabase")]
+    partial class InitialDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,11 +54,9 @@ namespace PatientManager.Api.Migrations
 
             modelBuilder.Entity("PatientManager.Api.Entities.Patient", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -101,13 +99,30 @@ namespace PatientManager.Api.Migrations
                     b.ToTable("PatientTags");
                 });
 
+            modelBuilder.Entity("PatientManager.Api.Entities.ViewModels.PatientInSearchInfo", b =>
+                {
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("View_PatientInSearchInfos", (string)null);
+                });
+
             modelBuilder.Entity("PatientManager.Api.Entities.Visit", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
@@ -115,8 +130,8 @@ namespace PatientManager.Api.Migrations
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
@@ -157,8 +172,8 @@ namespace PatientManager.Api.Migrations
                     b.Property<int>("PatientTagsId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PatientsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientsId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("PatientTagsId", "PatientsId");
 

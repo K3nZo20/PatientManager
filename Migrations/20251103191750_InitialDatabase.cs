@@ -6,29 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PatientManager.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class ConfigureTabelsAndConnections : Migration
+    public partial class InitialDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "PhoneNumber",
-                table: "Patients",
-                type: "char(9)",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(max)");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Pesel",
-                table: "Patients",
-                type: "char(11)",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(max)");
-
             migrationBuilder.CreateTable(
-                name: "Employee",
+                name: "Employees",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -39,11 +23,27 @@ namespace PatientManager.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Employee", x => x.Id);
+                    table.PrimaryKey("PK_Employees", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PatientTag",
+                name: "Patients",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "char(9)", nullable: false),
+                    Pesel = table.Column<string>(type: "char(11)", nullable: false),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Patients", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PatientTags",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -52,7 +52,7 @@ namespace PatientManager.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PatientTag", x => x.Id);
+                    table.PrimaryKey("PK_PatientTags", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,15 +73,15 @@ namespace PatientManager.Api.Migrations
                 columns: table => new
                 {
                     PatientTagsId = table.Column<int>(type: "int", nullable: false),
-                    PatientsId = table.Column<int>(type: "int", nullable: false)
+                    PatientsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PatientPatientTag", x => new { x.PatientTagsId, x.PatientsId });
                     table.ForeignKey(
-                        name: "FK_PatientPatientTag_PatientTag_PatientTagsId",
+                        name: "FK_PatientPatientTag_PatientTags_PatientTagsId",
                         column: x => x.PatientTagsId,
-                        principalTable: "PatientTag",
+                        principalTable: "PatientTags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -96,21 +96,20 @@ namespace PatientManager.Api.Migrations
                 name: "Visits",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TypeId = table.Column<int>(type: "int", nullable: false),
                     VisitDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PatientId = table.Column<int>(type: "int", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Visits", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Visits_Employee_EmployeeId",
+                        name: "FK_Visits_Employees_EmployeeId",
                         column: x => x.EmployeeId,
-                        principalTable: "Employee",
+                        principalTable: "Employees",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -158,29 +157,16 @@ namespace PatientManager.Api.Migrations
                 name: "Visits");
 
             migrationBuilder.DropTable(
-                name: "PatientTag");
+                name: "PatientTags");
 
             migrationBuilder.DropTable(
-                name: "Employee");
+                name: "Employees");
+
+            migrationBuilder.DropTable(
+                name: "Patients");
 
             migrationBuilder.DropTable(
                 name: "VisitTypes");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "PhoneNumber",
-                table: "Patients",
-                type: "nvarchar(max)",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "char(9)");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Pesel",
-                table: "Patients",
-                type: "nvarchar(max)",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "char(11)");
         }
     }
 }

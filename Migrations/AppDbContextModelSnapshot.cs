@@ -46,16 +46,14 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employees", (string)null);
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.Patient", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -78,7 +76,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.PatientTag", b =>
@@ -95,16 +93,33 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PatientTags", (string)null);
+                    b.ToTable("PatientTags");
+                });
+
+            modelBuilder.Entity("PatientManager.Api.Entities.ViewModels.PatientInSearchInfo", b =>
+                {
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("View_PatientInSearchInfos", (string)null);
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.Visit", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
@@ -112,8 +127,8 @@ namespace PatientManager.Api.Migrations
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
@@ -129,7 +144,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("Visits", (string)null);
+                    b.ToTable("Visits");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.VisitType", b =>
@@ -146,7 +161,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VisitTypes", (string)null);
+                    b.ToTable("VisitTypes");
                 });
 
             modelBuilder.Entity("PatientPatientTag", b =>
@@ -154,14 +169,14 @@ namespace PatientManager.Api.Migrations
                     b.Property<int>("PatientTagsId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PatientsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientsId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("PatientTagsId", "PatientsId");
 
                     b.HasIndex("PatientsId");
 
-                    b.ToTable("PatientPatientTag", (string)null);
+                    b.ToTable("PatientPatientTag");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.Visit", b =>

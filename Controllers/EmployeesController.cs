@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PatientManager.Api.Entities;
 
-namespace PatientManager.Api.Controlers
+namespace PatientManager.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

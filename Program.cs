@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PatientManager.Api.Entities;
+using PatientManager.Api.Generator;
+using PatientManager.Api.Services;
 using System.Text.Json.Serialization;
 
 
@@ -8,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -50,15 +53,13 @@ var employees = dbContext.Employees.ToList();
 
 if (!employees.Any())
 {
-    var user1 = new Employee()
-    {
-        FirstName = "Aleksandra",
-        LastName = "Martowicz",
-        Title = "Manager",
-        PhoneNumber = "123123123"
-    };
-    dbContext.Employees.Add(user1);
-    dbContext.SaveChanges();
+    DataGenerator.GenerateEmployee(dbContext, 10);
+}
+
+var patients = dbContext.Patients.ToList();
+if (!patients.Any())
+{
+    DataGenerator.GeneratePatients(dbContext, 100);
 }
 
 app.Run();
