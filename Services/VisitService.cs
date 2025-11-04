@@ -1,0 +1,98 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PatientManager.Api.Entities;
+
+namespace PatientManager.Api.Services
+{
+    public class VisitService : IVisitService
+    {
+        private readonly AppDbContext _context;
+        public VisitService(AppDbContext context)
+        {
+            _context = context;
+        }
+        public async Task<IEnumerable<Visit>> GetAllPatientVisitsAsync(Guid patientId)
+        {
+            var visits = await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .Where(v => v.PatientId == patientId)
+                .OrderByDescending(v => v.VisitDate)
+                .ToListAsync();
+            return visits;
+        }
+
+        public async Task<IEnumerable<Visit>> GetVisitsByDateAsync(DateTime date)
+        {
+            var startOfDay = date.Date;
+            var endOfDay = date.Date.AddDays(1);
+
+            var visits = await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .Where(v => v.VisitDate >= startOfDay && v.VisitDate < endOfDay)
+                .OrderBy(v => v.VisitDate)
+                .ToListAsync();
+
+            return visits;
+        }
+
+        public async Task<Visit> CreateAsync(Visit visit)
+        {
+            if (!_context.Patients.Any(p => p.Id == visit.PatientId))
+                throw new Exception("Pacjent nie istnieje.");
+
+            if (!_context.Employees.Any(e => e.Id == visit.EmployeeId))
+                throw new Exception("Pracownik nie istnieje.");
+
+            bool overlap = await _context.Visits.AnyAsync(v =>
+                    v.EmployeeId == visit.EmployeeId &&
+                    v.VisitDate == visit.VisitDate);
+
+            if (overlap)
+                throw new Exception("Pracownik ma już wizytę w tym terminie.");
+
+            visit.Id = Guid.NewGuid();
+            _context.Visits.Add(visit);
+            await _context.SaveChangesAsync();
+            return visit;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var visit = await GetByIdAsync(id);
+            if (visit == null) return false;
+
+            _context.Visits.Remove(visit);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Visit?> GetByIdAsync(Guid id)
+        {
+            return await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .FirstOrDefaultAsync(v => v.Id == id);
+
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, Visit visit)
+        {
+            var existing = await _context.Visits.FindAsync(id);
+            if (existing == null) return false;
+
+            existing.VisitDate = visit.VisitDate;
+            existing.Comment = visit.Comment;
+            existing.VisitTypeId = visit.VisitTypeId;
+            existing.EmployeeId = visit.EmployeeId;
+            existing.PatientId = visit.PatientId;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+    }
+}

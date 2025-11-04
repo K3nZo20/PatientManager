@@ -34,6 +34,8 @@ namespace PatientManager.Api.Services
                     {nameof(Patient.PatientTags), p => p.PatientTags},
                     {nameof(Patient.Visits), p => p.Visits},
                 };
+
+                sortBy = char.ToUpper(sortBy[0]) + sortBy.Substring(1);
                 var sortByExpression = columnSelector[sortBy];
                 query = sortByDescending ? query.OrderByDescending(sortByExpression) : query.OrderBy(sortByExpression);
             }

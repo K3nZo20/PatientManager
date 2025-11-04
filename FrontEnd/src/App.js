@@ -1,19 +1,17 @@
 ﻿import React, { useState } from "react";
-import PatientList from "./components/PatientList";
-import EmployeeList from "./components/EmployeeList";
+import CalendarView from "./components/CalendarView";
+import DaySchedule from "./components/DaySchedule";
 
 function App() {
-    const [view, setView] = useState("patients"); // "patients" lub "employees"
+    const [selectedDate, setSelectedDate] = useState(null);
 
     return (
-        <div style={{ padding: "20px" }}>
-            <div style={{ marginBottom: "20px" }}>
-                <button onClick={() => setView("patients")}>Pacjenci</button>
-                <button onClick={() => setView("employees")}>Pracownicy</button>
-            </div>
-
-            {view === "patients" && <PatientList />}
-            {view === "employees" && <EmployeeList />}
+        <div>
+            {!selectedDate ? (
+                <CalendarView onDayClick={setSelectedDate} />
+            ) : (
+                <DaySchedule date={selectedDate} onBack={() => setSelectedDate(null)} />
+            )}
         </div>
     );
 }

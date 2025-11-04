@@ -9,6 +9,6 @@
         public string Pesel {  get; set; }
         public DateTime DateOfBirth { get; set; }
         public List<Visit> Visits { get; set; } = new List<Visit>();
-        public List<PatientTag> PatientTags { get; set; }
+        public List<PatientTag> PatientTags { get; set; } = new List<PatientTag>();
     }
 }
