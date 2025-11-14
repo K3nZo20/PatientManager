@@ -12,14 +12,13 @@ namespace PatientManager.Api.Services
         }
         public async Task<IEnumerable<Visit>> GetAllPatientVisitsAsync(Guid patientId)
         {
-            var visits = await _context.Visits
+            return await _context.Visits
                 .Include(v => v.Patient)
                 .Include(v => v.Employee)
                 .Include(v => v.VisitType)
                 .Where(v => v.PatientId == patientId)
-                .OrderByDescending(v => v.VisitDate)
+                .OrderByDescending(v => v.StartTime)
                 .ToListAsync();
-            return visits;
         }
 
         public async Task<IEnumerable<Visit>> GetVisitsByDateAsync(DateTime date)
@@ -31,11 +30,25 @@ namespace PatientManager.Api.Services
                 .Include(v => v.Patient)
                 .Include(v => v.Employee)
                 .Include(v => v.VisitType)
-                .Where(v => v.VisitDate >= startOfDay && v.VisitDate < endOfDay)
-                .OrderBy(v => v.VisitDate)
+                .Where(v => v.StartTime >= startOfDay && v.EndTime < endOfDay)
+                .OrderBy(v => v.StartTime)
                 .ToListAsync();
 
             return visits;
+        }
+
+        public async Task<IEnumerable<Visit>> GetVisitsByEmployeeAsync(Guid employeeId, DateTime date)
+        {
+            var startOfDay = date.Date;
+            var endOfDay = date.Date.AddDays(1);
+
+            return await _context.Visits
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .Include(v => v.Patient)
+                .Where(v => v.EmployeeId == employeeId && v.StartTime >= startOfDay && v.EndTime < endOfDay)
+                .OrderByDescending(v => v.StartTime)
+                .ToListAsync();
         }
 
         public async Task<Visit> CreateAsync(Visit visit)
@@ -48,7 +61,7 @@ namespace PatientManager.Api.Services
 
             bool overlap = await _context.Visits.AnyAsync(v =>
                     v.EmployeeId == visit.EmployeeId &&
-                    v.VisitDate == visit.VisitDate);
+                    v.StartTime == visit.StartTime);
 
             if (overlap)
                 throw new Exception("Pracownik ma już wizytę w tym terminie.");
@@ -84,7 +97,8 @@ namespace PatientManager.Api.Services
             var existing = await _context.Visits.FindAsync(id);
             if (existing == null) return false;
 
-            existing.VisitDate = visit.VisitDate;
+            existing.StartTime = visit.StartTime;
+            existing.EndTime = visit.EndTime;
             existing.Comment = visit.Comment;
             existing.VisitTypeId = visit.VisitTypeId;
             existing.EmployeeId = visit.EmployeeId;

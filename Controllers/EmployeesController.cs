@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PatientManager.Api.Entities;
+using PatientManager.Api.Services;
 
 namespace PatientManager.Api.Controllers
 {
@@ -8,25 +9,30 @@ namespace PatientManager.Api.Controllers
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IEmployeesService _service;
 
-        public EmployeesController(AppDbContext context) 
+        public EmployeesController(IEmployeesService service) 
         {
-            _context = context; 
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployee()
+        public async Task<IActionResult> GetEmployee(
+            [FromQuery] string? search,
+            [FromQuery] string? sortBy,
+            [FromQuery] bool sortByDescending,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var employees = await _context.Employees.ToListAsync();
-            return Ok(employees);
+
+            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize);
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<ActionResult<Employee>> AddEmployee(Employee employee)
         {
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+            await _service.CreateAsync(employee);
             return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
         }
     }
