@@ -35,13 +35,23 @@ function PatientList() {
         setPage(1);
     };
 
-    const handleSort = (field) => {
+    const handleSortAndChangePage = (field, newPage) => {
         if (sortBy === field) setSortDesc(!sortDesc);
         else {
             setSortBy(field);
             setSortDesc(false);
         }
+        if (newPage < 1 || newPage > totalPages) return;
+        setPage(newPage);
     };
+
+    const renderSortArrow = (field) => {
+        const style = { display: "inline-block", width: "1.2em", textAlign: "center" };
+
+        if (sortBy !== field) return <span style={style}> </span>;
+        return <span style={style}>{sortDesc ? "🔽" : "🔼"}</span>;
+    };
+
 
     return (
         <div style={{ padding: "20px" }}>
@@ -60,14 +70,14 @@ function PatientList() {
             />
 
             {/* 📋 Tabela */}
-            <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
+            <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
                 <thead>
-                    <tr>
-                        <th onClick={() => handleSort("firstName")}>Imię</th>
-                        <th onClick={() => handleSort("lastName")}>Nazwisko</th>
-                        <th onClick={() => handleSort("pesel")}>PESEL</th>
-                        <th onClick={() => handleSort("dateOfBirth")}>Data urodzenia</th>
-                        <th onClick={() => handleSort("phoneNumber")}>Telefon</th>
+                    <tr style={{ backgroundColor: "#f2f2f2" }}>
+                        <th onClick={() => handleSortAndChangePage("firstName", 1)} style={thStyle} >Imię {renderSortArrow("firstName")}</th>
+                        <th onClick={() => handleSortAndChangePage("lastName", 1)} style={thStyle} >Nazwisko {renderSortArrow("lastName")}</th>
+                        <th style={thStyle} >PESEL</th>
+                        <th style={thStyle} >Data urodzenia</th>
+                        <th style={thStyle} >Telefon</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,11 +88,11 @@ function PatientList() {
                     ) : (
                         patients.map((p) => (
                             <tr key={p.id}>
-                                <td>{p.firstName}</td>
-                                <td>{p.lastName}</td>
-                                <td>{p.pesel}</td>
-                                <td>{p.dateOfBirth?.substring(0, 10)}</td>
-                                <td>{p.phoneNumber}</td>
+                                <td style={thStyle}>{p.firstName}</td>
+                                <td style={thStyle}>{p.lastName}</td>
+                                <td style={thStyle}>{p.pesel}</td>
+                                <td style={thStyle}>{p.dateOfBirth?.substring(0, 10)}</td>
+                                <td style={thStyle}>{p.phoneNumber}</td>
                             </tr>
                         ))
                     )}
@@ -126,5 +136,16 @@ function PatientList() {
         </div>
     );
 }
+
+const thStyle = {
+    border: "1px solid #ddd",
+    padding: "8px",
+    textAlign: "left",
+};
+
+const tdStyle = {
+    border: "1px solid #ddd",
+    padding: "8px",
+};
 
 export default PatientList;

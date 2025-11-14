@@ -9,7 +9,8 @@ namespace PatientManager.Api.Entities
         public string? Comment { get; set; }
         public VisitType VisitType { get; set; }
         public int VisitTypeId { get; set; }
-        public DateTime VisitDate { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
         public Patient Patient { get; set; }
         public Guid PatientId { get; set; }
         public Employee Employee { get; set; }

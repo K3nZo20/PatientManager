@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PatientManager.Api.DTOs;
 using PatientManager.Api.Entities;
 using PatientManager.Api.Services;
 
@@ -16,7 +17,7 @@ namespace PatientManager.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] Guid? patientId, [FromQuery] DateTime? date)
+        public async Task<IActionResult> GetAllVisits([FromQuery] Guid? patientId, [FromQuery] DateTime? date)
         {
             if (patientId.HasValue)
                 return Ok(await _service.GetAllPatientVisitsAsync(patientId.Value));
@@ -29,7 +30,7 @@ namespace PatientManager.Api.Controllers
         }
 
 
-        [HttpGet("{id}")]
+        [HttpGet("/byId{id}")]
         public async Task<IActionResult> GetVisitById(Guid id)
         {
             var visit = await _service.GetByIdAsync(id);
@@ -37,12 +38,31 @@ namespace PatientManager.Api.Controllers
             return Ok(visit);
         }
 
+        [HttpGet("byEmployee")]
+        public async Task<IActionResult> GetVisitByEmployee([FromQuery] Guid employeeId, [FromQuery] DateTime date)
+        {
+            var visits = await _service.GetVisitsByEmployeeAsync(employeeId, date);
+            if (visits == null) return NotFound();
+            return Ok(visits);
+        }
+
 
         [HttpPost]
-        public async Task<IActionResult> CreateVisit([FromBody] Visit visit)
+        public async Task<IActionResult> CreateVisit([FromBody] VisitCreateDto dto)
         {
             try
             {
+                var visit = new Visit
+                {
+                    Id = Guid.NewGuid(),
+                    PatientId = dto.PatientId,
+                    EmployeeId = dto.EmployeeId,
+                    VisitTypeId = dto.VisitTypeId,
+                    StartTime = dto.StartTime,
+                    EndTime = dto.EndTime,
+                    Comment = dto.Comment
+                };
+
                 var created = await _service.CreateAsync(visit);
                 return CreatedAtAction(nameof(GetVisitById), new { id = created.Id }, created);
             }
@@ -51,6 +71,7 @@ namespace PatientManager.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVisit(Guid id, [FromBody] Visit visit)

@@ -26,8 +26,8 @@ namespace PatientManager.Api.Controllers
 
 
         {
-            var patients = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize);
-            return Ok(patients);
+            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
