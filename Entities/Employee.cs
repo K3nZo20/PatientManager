@@ -7,6 +7,6 @@
         public string LastName { get; set; }
         public string Title { get; set; }
         public string PhoneNumber { get; set; }
-        public List<Visit> Visits { get; set; }
+        public List<Visit> Visits { get; set; } = new List<Visit>();
     }
 }

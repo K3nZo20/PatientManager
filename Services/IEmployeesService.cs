@@ -8,5 +8,7 @@ namespace PatientManager.Api.Services
         Task<PagedResultDto<Employee>> GetAllAsync(string? search, string? sortBy, bool sortByDescending, int page, int pageSize);
         Task<Employee> CreateAsync(Employee employee);
         Task<Employee?> GetByIdAsync(Guid id);
+        Task<bool> UpdateAsync(Guid id, Employee employee);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -1,6 +1,8 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { format } from "date-fns"
+import PatientForm from "./Forms/PatientForm";
 
-function PatientList() {
+function PatientList({ onSelectPatient }) {
     const [patients, setPatients] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -8,8 +10,9 @@ function PatientList() {
     const [search, setSearch] = useState("");
     const [sortBy, setSortBy] = useState("lastName");
     const [sortDesc, setSortDesc] = useState(false);
+    const [showForm, setShowForm] = useState(false);
 
-    useEffect(() => {
+    const fetchPatients = useCallback(() => {
         fetch(
             `https://localhost:7193/api/patients?search=${search}&sortBy=${sortBy}&sortByDescending=${sortDesc}&page=${page}&pageSize=${pageSize}`
         )
@@ -21,7 +24,11 @@ function PatientList() {
             .catch((err) =>
                 console.error("Błąd podczas pobierania pacjentów:", err)
             );
-    }, [page, pageSize, search, sortBy, sortDesc]);
+    }, [search, sortBy, sortDesc, page, pageSize]);
+
+    useEffect(() => {
+        fetchPatients();
+    }, [fetchPatients]);
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -55,21 +62,52 @@ function PatientList() {
 
     return (
         <div style={{ padding: "20px" }}>
-            <h1>👩‍⚕️ Lista pacjentów</h1>
+            <h1>🧍‍ Lista pacjentów</h1>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <input
+                    type="text"
+                    placeholder="Szukaj pacjenta..."
+                    value={search}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        setPage(1);
+                    }}
+                    style={{ marginBottom: "10px", padding: "5px", width: "250px" }}
+                />
+                <button
+                    style={{
+                        backgroundColor: "#1976d2",
+                        color: "white",
+                        border: "none",
+                        padding: "10px 20px",
+                        borderRadius: "6px",
+                    }}
+                    onClick={() => setShowForm(!showForm)}
+                >
+                    ➕ Dodaj pacjenta
+                </button>
+            </div>
 
-            {/* 🔍 Wyszukiwanie */}
-            <input
-                type="text"
-                placeholder="Szukaj pacjenta..."
-                value={search}
-                onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                }}
-                style={{ marginBottom: "10px", padding: "5px", width: "250px" }}
-            />
+            {showForm && (
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                    <div style={{
+                        width: "400px",
+                        background: "white",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                    }}>
+                        <PatientForm
+                            onPatientAdded={(addedPatient) => {
+                                setPatients((prev) => [...prev, addedPatient]);
+                                setShowForm(false);
+                            }}
+                            onCancel={() => setShowForm(false)}
+                        />
+                    </div>
+                </div>
+            )}
 
-            {/* 📋 Tabela */}
             <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
                 <thead>
                     <tr style={{ backgroundColor: "#f2f2f2" }}>
@@ -87,11 +125,20 @@ function PatientList() {
                         </tr>
                     ) : (
                         patients.map((p) => (
-                            <tr key={p.id}>
+                            <tr
+                                key={p.id}
+                                onClick={() => onSelectPatient(p.id)}
+                                style={{
+                                    cursor: "pointer",
+                                    transition: "0.2s",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = "#f7f7f7")}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                            >
                                 <td style={thStyle}>{p.firstName}</td>
                                 <td style={thStyle}>{p.lastName}</td>
                                 <td style={thStyle}>{p.pesel}</td>
-                                <td style={thStyle}>{p.dateOfBirth?.substring(0, 10)}</td>
+                                <td style={thStyle}>{format(p.dateOfBirth, "dd-MM-yyyy")}</td>
                                 <td style={thStyle}>{p.phoneNumber}</td>
                             </tr>
                         ))
@@ -99,7 +146,6 @@ function PatientList() {
                 </tbody>
             </table>
 
-            {/* 📄 Paginacja */}
             <div style={{ marginTop: "15px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
                     ⬅️
@@ -141,11 +187,6 @@ const thStyle = {
     border: "1px solid #ddd",
     padding: "8px",
     textAlign: "left",
-};
-
-const tdStyle = {
-    border: "1px solid #ddd",
-    padding: "8px",
 };
 
 export default PatientList;

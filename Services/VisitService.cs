@@ -10,6 +10,29 @@ namespace PatientManager.Api.Services
         {
             _context = context;
         }
+
+        public async Task<IEnumerable<Visit>> GetAllVisitsAsync()
+        {
+            return await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Visit>> GetVisitsByEmployeeAndDate(List<Guid> employeesId, DateTime date)
+        {
+
+            return await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Employee)
+                .Include(v => v.VisitType)
+                .Where(v => employeesId.Contains(v.EmployeeId) &&
+                    v.StartTime.Date == date.Date)
+                .ToListAsync();
+        }
+
+
         public async Task<IEnumerable<Visit>> GetAllPatientVisitsAsync(Guid patientId)
         {
             return await _context.Visits
@@ -37,16 +60,21 @@ namespace PatientManager.Api.Services
             return visits;
         }
 
-        public async Task<IEnumerable<Visit>> GetVisitsByEmployeeAsync(Guid employeeId, DateTime date)
+        public async Task<IEnumerable<Visit>> GetVisitsByEmployeeAsync(Guid employeeId)
         {
-            var startOfDay = date.Date;
-            var endOfDay = date.Date.AddDays(1);
-
+            return await _context.Visits
+                .Include(v => v.VisitType)
+                .Include(v => v.Patient)
+                .Where(v => v.EmployeeId == employeeId)
+                .OrderByDescending(v => v.StartTime)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<Visit>> GetVisitsByPatientAsync(Guid patientId)
+        {
             return await _context.Visits
                 .Include(v => v.Employee)
                 .Include(v => v.VisitType)
-                .Include(v => v.Patient)
-                .Where(v => v.EmployeeId == employeeId && v.StartTime >= startOfDay && v.EndTime < endOfDay)
+                .Where(v => v.PatientId == patientId)
                 .OrderByDescending(v => v.StartTime)
                 .ToListAsync();
         }

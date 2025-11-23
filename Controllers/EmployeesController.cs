@@ -22,11 +22,19 @@ namespace PatientManager.Api.Controllers
             [FromQuery] string? sortBy,
             [FromQuery] bool sortByDescending,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int? pageSize = null)
         {
 
-            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize);
+            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize ?? 0);
             return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetEmployee(Guid id)
+        {
+            var employee = await _service.GetByIdAsync(id);
+            if (employee == null) return NotFound();
+            return Ok(employee);
         }
 
         [HttpPost]
@@ -34,6 +42,22 @@ namespace PatientManager.Api.Controllers
         {
             await _service.CreateAsync(employee);
             return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEmployee(Guid id, [FromBody] Employee employee)
+        {
+            var updated = await _service.UpdateAsync(id, employee);
+            if (!updated) return NotFound();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteVisit(Guid id)
+        {
+            var deleted = await _service.DeleteAsync(id);
+            if (!deleted) return NotFound();
+            return NoContent();
         }
     }
 }

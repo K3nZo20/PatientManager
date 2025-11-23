@@ -3,7 +3,7 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import VisitForm from "./VisitForm";
+import VisitForm from "./Forms/VisitForm";
 
 const locales = { pl };
 const localizer = dateFnsLocalizer({
@@ -14,19 +14,20 @@ const localizer = dateFnsLocalizer({
     locales,
 });
 
-function SchedulePage() {
+function SchedulePage({ onSelectPatient, onSelectEmployee }) {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [visits, setVisits] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState("");
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [visitToEdit, setVisitToEdit] = useState(null);
 
-    // 🧩 Pobranie listy lekarzy
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const res = await fetch("https://localhost:7193/api/employees");
+                const res = await fetch(`https://localhost:7193/api/employees?sortBy=${"lastName"}`);
                 const data = await res.json();
                 setEmployees(data.items);
             } catch (err) {
@@ -36,14 +37,13 @@ function SchedulePage() {
         fetchEmployees();
     }, []);
 
-    // 🩺 Pobranie wizyt dla daty i wybranego lekarza
     const fetchVisits = async (date, employeeId) => {
         setLoading(true);
-        const formattedDate = date.toISOString().split("T")[0];
+        const formattedDate = format(date, "yyyy-MM-dd");
         try {
             let url = `https://localhost:7193/api/visits?date=${formattedDate}`;
             if (employeeId) {
-                url = `https://localhost:7193/api/visits/byEmployee?employeeId=${employeeId}&date=${formattedDate}`; // 👈 filtr po lekarzu
+                url = `https://localhost:7193/api/visits?employeeIds=${employeeId}&date=${formattedDate}`;
             }
             const res = await fetch(url);
             const data = await res.json();
@@ -57,23 +57,14 @@ function SchedulePage() {
         }
     };
 
-    // 🔁 odświeżanie przy zmianie daty lub lekarza
     useEffect(() => {
         fetchVisits(selectedDate, selectedEmployee);
     }, [selectedDate, selectedEmployee]);
-
-    const calendarEvents = visits.map((v) => ({
-        id: v.id,
-        title: `${v.patient?.firstName || ""} ${v.patient?.lastName || ""} - ${v.visitType?.value || ""}`,
-        start: new Date(v.startTime),
-        end: new Date(v.endTime),
-    }));
 
     return (
         <div style={{ padding: "20px" }}>
             <h1>🩺 Harmonogram wizyt</h1>
 
-            {/* 🔝 Górny pasek: select lekarza i przycisk dodawania */}
             <div
                 style={{
                     display: "flex",
@@ -82,7 +73,6 @@ function SchedulePage() {
                     marginBottom: "20px",
                 }}
             >
-                {/* Pole wyboru lekarza */}
                 <div style={{ flex: "0 0 60%", textAlign: "center" }}>
                     <form>
                         <label htmlFor="employeeSelect" style={{ marginRight: "10px" }}>
@@ -109,7 +99,6 @@ function SchedulePage() {
                     </form>
                 </div>
 
-                {/* Przycisk po prawej */}
                 <button
                     style={{
                         backgroundColor: "#1976d2",
@@ -124,9 +113,7 @@ function SchedulePage() {
                 </button>
             </div>
 
-            {/* 🧭 Główna zawartość */}
             <div style={{ display: "flex", gap: "20px" }}>
-                {/* Lewo - kalendarz */}
                 <div style={{ flex: "0 0 30%" }}>
                     <Calendar
                         localizer={localizer}
@@ -135,16 +122,17 @@ function SchedulePage() {
                         onNavigate={(date) => setSelectedDate(date)}
                         views={["month"]}
                         style={{ height: "400px", width: "100%" }}
+                        onSelectSlot={({ start }) => setSelectedDate(start)}
+                        selectable
                     />
                 </div>
 
-                {/* Środek - lista wizyt */}
                 <div style={{ overflowX: "auto", flex: "1 1 50%" }}>
                     <h3>
                         Wizyty w dniu {selectedDate.toLocaleDateString("pl-PL")}
                         {selectedEmployee &&
-                            ` (lekarz: ${employees.find((e) => e.id === Number(selectedEmployee))?.firstName || ""
-                            } ${employees.find((e) => e.id === Number(selectedEmployee))?.lastName || ""
+                            ` (${employees.find((e) => e.id === selectedEmployee)?.firstName || ""
+                            } ${employees.find((e) => e.id === selectedEmployee)?.lastName || ""
                             })`}
                     </h3>
 
@@ -170,6 +158,8 @@ function SchedulePage() {
                                         <th style={{ width: "8%" }}>Typ</th>
                                         <th style={{ width: "12%" }}>Lekarz</th>
                                         <th style={{ width: "60%" }}>Komentarz</th>
+                                        <th style={{ width: "5%" }}>Akcje</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -192,11 +182,21 @@ function SchedulePage() {
                                                     minute: "2-digit",
                                                 })}
                                             </td>
-                                            <td>
+                                            <td
+                                                style={{ cursor: "pointer", transition: "0.2s" }}
+                                                onClick={() => onSelectPatient(v.patient.id)}
+                                                onMouseEnter={(e) => (e.currentTarget.style.background = "#f7f7f7")}
+                                                onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                                            >
                                                 {v.patient?.firstName} {v.patient?.lastName}
                                             </td>
                                             <td>{v.visitType?.value}</td>
-                                            <td>
+                                            <td
+                                                style={{ cursor: "pointer", transition: "0.2s" }}
+                                                onClick={() => onSelectEmployee(v.employee.id)}
+                                                onMouseEnter={(e) => (e.currentTarget.style.background = "#f7f7f7")}
+                                                onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                                            >
                                                 {v.employee?.firstName} {v.employee?.lastName}
                                             </td>
                                             <td
@@ -209,6 +209,62 @@ function SchedulePage() {
                                             >
                                                 {v.comment}
                                             </td>
+                                            <td style={{ padding: "2px 5px", textAlign: "center" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "2px"}}>
+                                                    <button
+                                                        style={{
+                                                            padding: "2px 4px",
+                                                            backgroundColor: "#1976d2",
+                                                            color: "white",
+                                                            border: "none",
+                                                            borderRadius: "4px",
+                                                            cursor: "pointer",
+                                                            fontSize: "12px",
+                                                        }}
+                                                        onClick={() => {
+                                                            setVisitToEdit(v);
+                                                            setShowEditForm(true);
+                                                            setShowForm(false);
+
+                                                            setTimeout(() => {
+                                                                window?.scrollTo({ top: 0, behavior: "smooth" });
+                                                            }, 50);
+                                                        }}
+                                                    >
+                                                        Edytuj
+                                                    </button>
+
+                                                    <button
+                                                        style={{
+                                                        padding: "2px 4px",
+                                                        backgroundColor: "#e53935",
+                                                        color: "white",
+                                                        border: "none",
+                                                        borderRadius: "4px",
+                                                        cursor: "pointer",
+                                                        fontSize: "12px",
+                                                    }}
+                                                        onClick={async () => {
+                                                            const confirmed = window.confirm("Czy na pewno chcesz usunąć tę wizytę?");
+                                                            if (!confirmed) return;
+
+                                                            try {
+                                                                const res = await fetch(`https://localhost:7193/api/visits/${v.id}`, {
+                                                                    method: "DELETE",
+                                                                });
+
+                                                                if (!res.ok) throw new Error("Nie udało się usunąć wizyty");
+
+                                                                fetchVisits(selectedDate, selectedEmployee);
+                                                            } catch (err) {
+                                                                alert("Błąd podczas usuwania wizyty: " + err.message);
+                                                            }
+                                                        }}
+                                                    >
+                                                        Usuń
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -217,7 +273,6 @@ function SchedulePage() {
                     )}
                 </div>
 
-                {/* Prawo - formularz */}
                 {showForm && (
                     <div style={{ flex: "0 0 25%", transition: "all 0.3s ease" }}>
                         <VisitForm
@@ -226,9 +281,29 @@ function SchedulePage() {
                                 fetchVisits(selectedDate, selectedEmployee);
                                 setShowForm(false);
                             }}
+                            onCancel={() => setShowForm(false)}
                         />
                     </div>
                 )}
+
+                {showEditForm && visitToEdit && (
+                    <div style={{ flex: "0 0 25%", transition: "all 0.3s ease" }}>
+                        <VisitForm
+                            date={selectedDate}
+                            visitToEdit={visitToEdit}
+                            onVisitAdded={() => {
+                                fetchVisits(selectedDate, selectedEmployee);
+                                setShowEditForm(false);
+                                setVisitToEdit(null);
+                            }}
+                            onCancel={() => {
+                                setShowEditForm(false);
+                                setVisitToEdit(null);
+                            }}
+                        />
+                    </div>
+                )}
+
             </div>
         </div>
     );

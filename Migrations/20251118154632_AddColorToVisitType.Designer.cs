@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PatientManager.Api.Entities;
 
@@ -11,9 +12,11 @@ using PatientManager.Api.Entities;
 namespace PatientManager.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118154632_AddColorToVisitType")]
+    partial class AddColorToVisitType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,7 +49,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employees", (string)null);
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.Patient", b =>
@@ -76,7 +79,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.PatientTag", b =>
@@ -93,7 +96,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PatientTags", (string)null);
+                    b.ToTable("PatientTags");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.ViewModels.PatientInSearchInfo", b =>
@@ -147,7 +150,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasIndex("VisitTypeId");
 
-                    b.ToTable("Visits", (string)null);
+                    b.ToTable("Visits");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.VisitType", b =>
@@ -168,7 +171,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VisitTypes", (string)null);
+                    b.ToTable("VisitTypes");
                 });
 
             modelBuilder.Entity("PatientPatientTag", b =>
@@ -183,7 +186,7 @@ namespace PatientManager.Api.Migrations
 
                     b.HasIndex("PatientsId");
 
-                    b.ToTable("PatientPatientTag", (string)null);
+                    b.ToTable("PatientPatientTag");
                 });
 
             modelBuilder.Entity("PatientManager.Api.Entities.Visit", b =>

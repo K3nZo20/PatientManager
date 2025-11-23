@@ -36,6 +36,18 @@ namespace PatientManager.Api.Services
                 query = sortByDescending ? query.OrderByDescending(sortByExpression) : query.OrderBy(sortByExpression);
             }
 
+            if (pageSize == 0)
+            {
+                var all = await query.ToListAsync();
+                return new PagedResultDto<Employee>
+                {
+                    Items = all,
+                    TotalCount = all.Count,
+                    Page = page,
+                    PageSize = pageSize
+                };
+            }
+
             var totalCount = await query.CountAsync();
             var items = await query
                 .Skip((page - 1) * pageSize)
@@ -63,6 +75,30 @@ namespace PatientManager.Api.Services
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
             return employee;
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, Employee employee)
+        {
+            var existing = await _context.Employees.FindAsync(id);
+            if (existing == null) return false;
+
+            existing.FirstName = employee.FirstName;
+            existing.LastName = employee.LastName;
+            existing.PhoneNumber = employee.PhoneNumber;
+            existing.Title = employee.Title;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var employee = await GetByIdAsync(id);
+            if (employee == null) return false;
+
+            _context.Employees.Remove(employee);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

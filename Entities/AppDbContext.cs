@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PatientManager.Api.Entities.ViewModels;
 
 namespace PatientManager.Api.Entities
 {
@@ -15,7 +14,6 @@ namespace PatientManager.Api.Entities
         public DbSet<VisitType> VisitTypes { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<PatientTag> PatientTags { get; set; }
-        public DbSet<PatientInSearchInfo> ViewPatientInSearchInfos { get; set; }
         public object T { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

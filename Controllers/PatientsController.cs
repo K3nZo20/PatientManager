@@ -22,11 +22,11 @@ namespace PatientManager.Api.Controllers
             [FromQuery] string? sortBy,
             [FromQuery] bool sortByDescending,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int? pageSize = null)
 
 
         {
-            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize);
+            var result = await _service.GetAllAsync(search, sortBy, sortByDescending, page, pageSize ?? 0);
             return Ok(result);
         }
 
