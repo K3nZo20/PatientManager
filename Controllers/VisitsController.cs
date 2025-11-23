@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using PatientManager.Api.DTOs;
 using PatientManager.Api.Entities;
 using PatientManager.Api.Services;
@@ -17,17 +18,14 @@ namespace PatientManager.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllVisits([FromQuery] Guid? patientId, [FromQuery] DateTime? date)
+        public async Task<IActionResult> GetAllVisits([FromQuery] List<Guid>? employeeIds, [FromQuery] DateTime date)
         {
-            if (patientId.HasValue)
-                return Ok(await _service.GetAllPatientVisitsAsync(patientId.Value));
+            if (employeeIds == null || !employeeIds.Any())
+                return Ok(await _service.GetVisitsByDateAsync(date));
 
-            if (date.HasValue)
-                return Ok(await _service.GetVisitsByDateAsync(date.Value));
-
-            // np. zwróć wszystkie wizyty lub pustą listę
-            return Ok(new List<Visit>());
+            return Ok(await _service.GetVisitsByEmployeeAndDate(employeeIds, date));
         }
+
 
 
         [HttpGet("/byId{id}")]
@@ -39,13 +37,20 @@ namespace PatientManager.Api.Controllers
         }
 
         [HttpGet("byEmployee")]
-        public async Task<IActionResult> GetVisitByEmployee([FromQuery] Guid employeeId, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetVisitByEmployee([FromQuery] Guid employeeId)
         {
-            var visits = await _service.GetVisitsByEmployeeAsync(employeeId, date);
+            var visits = await _service.GetVisitsByEmployeeAsync(employeeId);
             if (visits == null) return NotFound();
             return Ok(visits);
         }
 
+        [HttpGet("byPatient")]
+        public async Task<IActionResult> GetVisitByPatient([FromQuery] Guid patientId)
+        {
+            var visits = await _service.GetVisitsByPatientAsync(patientId);
+            if (visits == null) return NotFound();
+            return Ok(visits);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateVisit([FromBody] VisitCreateDto dto)
@@ -72,7 +77,6 @@ namespace PatientManager.Api.Controllers
             }
         }
 
-
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVisit(Guid id, [FromBody] Visit visit)
         {
@@ -88,12 +92,5 @@ namespace PatientManager.Api.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
-
-        //[HttpGet("by-date")]
-        //public async Task<IActionResult> GetVisitsByDate([FromQuery] DateTime date)
-        //{
-        //    var visits = await _service.GetVisitsByDateAsync(date);
-        //    return Ok(visits);
-        //}
     }
 }

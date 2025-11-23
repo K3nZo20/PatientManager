@@ -1,30 +1,100 @@
-﻿import React, { useState } from "react";
-import WeekCalendar from "./components/WeekCalendar";
+import React, { useState } from "react";
+import DayCalendar from "./components/DayCalendar";
 import PatientList from "./components/PatientList";
 import EmployeeList from "./components/EmployeeList";
 import SchedulePage from "./components/SchedulePage";
+import EmployeeDetails from "./components/EmployeeDetails";
+import PatientDetails from "./components/PatientDetails";
 
 function App() {
-    const [activePage, setActivePage] = useState("patients");
+    const [activePage, setActivePage] = useState("dayCalendar");
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+    const [selectedPatientId, setSelectedPatientId] = useState(null);
+    const [previousPage, setPreviousPage] = useState(null);
+
+    const goToPage = (page) => {
+        setPreviousPage(activePage);
+        setActivePage(page);
+    };
+
 
     const renderPage = () => {
         switch (activePage) {
             case "patients":
-                return <PatientList />;
+                return (
+                    <PatientList
+                        onSelectPatient={(id) => {
+                            setSelectedPatientId(id);
+                            goToPage("patientDetails");
+                        }}
+                />
+                );
             case "employees":
-                return <EmployeeList />;
+                return (
+                    <EmployeeList
+                        onSelectEmployee={(id) => {
+                            setSelectedEmployeeId(id);
+                            goToPage("employeeDetails");
+                        }}
+                    />
+                );
             case "calendar":
-                return <SchedulePage />;
-            case "week":
-                return <WeekCalendar />;
+                return (
+                    <SchedulePage
+                        id={selectedPatientId}
+                        onSelectPatient={(id) => {
+                            setSelectedPatientId(id);
+                            goToPage("patientDetails");
+                        }}
+                        onSelectEmployee={(id) => {
+                            setSelectedEmployeeId(id);
+                            goToPage("employeeDetails");
+                        }}
+                    />
+                );
+            case "dayCalendar":
+                return (
+                    <DayCalendar
+                        id={selectedPatientId}
+                        onSelectPatient={(id) => {
+                            setSelectedPatientId(id);
+                            goToPage("patientDetails");
+                        }}
+                        onSelectEmployee={(id) => {
+                            setSelectedEmployeeId(id);
+                            goToPage("employeeDetails");
+                        }}
+                    />
+                );
+            case "employeeDetails":
+                return (
+                    <EmployeeDetails
+                        id={selectedEmployeeId}
+                        onBack={() => goToPage(previousPage || "employees")}
+                        onSelectPatient={(id) => {
+                            setSelectedPatientId(id);
+                            goToPage("patientDetails");
+                        }}
+                    />
+                );
+            case "patientDetails":
+                return (
+                    <PatientDetails
+                        id={selectedPatientId}
+                        onBack={() => goToPage(previousPage || "employees")}
+                        onSelectEmployee={(id) => {
+                            setSelectedEmployeeId(id);
+                            goToPage("employeeDetails");
+                        }}
+                    />
+                );
             default:
-                return <PatientList />;
+                return <DayCalendar />;
         }
     };
 
     return (
         <div style={{ fontFamily: "Arial, sans-serif" }}>
-            {/* 🔹 Pasek nawigacji */}
             <nav
                 style={{
                     display: "flex",
@@ -37,22 +107,13 @@ function App() {
                 }}
             >
                 <span
-                    onClick={() => setActivePage("patients")}
+                    onClick={() => setActivePage("dayCalendar")}
                     style={{
                         cursor: "pointer",
-                        textDecoration: activePage === "patients" ? "underline" : "none",
+                        textDecoration: activePage === "dayCalendar" ? "underline": "none",
                     }}
                 >
-                    👩‍⚕️ Pacjenci
-                </span>
-                <span
-                    onClick={() => setActivePage("employees")}
-                    style={{
-                        cursor: "pointer",
-                        textDecoration: activePage === "employees" ? "underline" : "none",
-                    }}
-                >
-                    👨‍🔬 Pracownicy
+                    🗓️ Tydzień
                 </span>
                 <span
                     onClick={() => setActivePage("calendar")}
@@ -64,17 +125,27 @@ function App() {
                     🗓️ Kalendarz
                 </span>
                 <span
-                    onClick={() => setActivePage("week")}
+                    onClick={() => setActivePage("patients")}
                     style={{
                         cursor: "pointer",
-                        textDecoration: activePage === "week" ? "underline": "none",
+                        textDecoration: activePage === "patients" ? "underline" : "none",
                     }}
                 >
-                    🗓️ Tydzień
+                    🧍‍ Pacjenci
                 </span>
+                <span
+                    onClick={() => setActivePage("employees")}
+                    style={{
+                        cursor: "pointer",
+                        textDecoration: activePage === "employees" ? "underline" : "none",
+                    }}
+                >
+                    👨‍🔬 Pracownicy
+                </span>
+                
+                
             </nav>
 
-            {/* 🔸 Zawartość strony */}
             <div style={{ padding: "20px" }}>{renderPage()}</div>
         </div>
     );

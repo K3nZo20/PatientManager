@@ -40,6 +40,19 @@ namespace PatientManager.Api.Services
                 var sortByExpression = columnSelector[sortBy];
                 query = sortByDescending ? query.OrderByDescending(sortByExpression) : query.OrderBy(sortByExpression);
             }
+
+            if (pageSize == 0)
+            {
+                var all = await query.ToListAsync();
+                return new PagedResultDto<Patient>
+                {
+                    Items = all,
+                    TotalCount = all.Count,
+                    Page = page,
+                    PageSize = pageSize
+                };
+            }
+
             var totalCount = await query.CountAsync();
             var items = await query
                 .Skip((page - 1) * pageSize)
