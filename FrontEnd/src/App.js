@@ -5,6 +5,7 @@ import EmployeeList from "./components/EmployeeList";
 import SchedulePage from "./components/SchedulePage";
 import EmployeeDetails from "./components/EmployeeDetails";
 import PatientDetails from "./components/PatientDetails";
+import Settings from "./components/Settings";
 
 function App() {
     const [activePage, setActivePage] = useState("dayCalendar");
@@ -81,13 +82,16 @@ function App() {
                 return (
                     <PatientDetails
                         id={selectedPatientId}
-                        onBack={() => goToPage(previousPage || "employees")}
+                        onBack={() => goToPage(previousPage || "patients")}
                         onSelectEmployee={(id) => {
                             setSelectedEmployeeId(id);
                             goToPage("employeeDetails");
                         }}
                     />
                 );
+            case "settings":
+                return <Settings />;
+
             default:
                 return <DayCalendar />;
         }
@@ -113,7 +117,7 @@ function App() {
                         textDecoration: activePage === "dayCalendar" ? "underline": "none",
                     }}
                 >
-                    🗓️ Tydzień
+                    🗓️ Dzień
                 </span>
                 <span
                     onClick={() => setActivePage("calendar")}
@@ -141,6 +145,15 @@ function App() {
                     }}
                 >
                     👨‍🔬 Pracownicy
+                </span>
+                <span
+                    onClick={() => setActivePage("settings")}
+                    style={{
+                        cursor: "pointer",
+                        textDecoration: activePage === "settings" ? "underline" : "none",
+                    }}
+                >
+                    ⚙️ Ustawienia
                 </span>
                 
                 

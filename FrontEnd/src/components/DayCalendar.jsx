@@ -3,6 +3,7 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import VisitForm from "./Forms/VisitForm";
 
 const locales = { pl };
 const localizer = dateFnsLocalizer({
@@ -23,6 +24,7 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
     const [employees, setEmployees] = useState([]);
     const [selectedDoctors, setSelectedDoctors] = useState([]);
     const [showDoctorList, setShowDoctorList] = useState(false);
+    const [newVisitData, setNewVisitData] = useState(null);
 
     const createDayTime = (hour) => {
         const d = new Date(date);
@@ -77,10 +79,6 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
         fetchVisits();
     }, [fetchVisits]);
 
-    const handleSelectEvent = (event) => {
-        setSelectedEvent(event.resource);
-    };
-
     const toggleDoctor = (id) => {
         setSelectedDoctors((prev) =>
             prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -113,6 +111,32 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
 
         return () => document.head.removeChild(style);
     }, []);
+
+    const handleSelectSlot = ({ start, end, resourceId }) => {
+        if (!resourceId) {
+            alert("Najpierw wybierz lekarza z listy.");
+            return;
+        }
+
+        setNewVisitData({
+            start,
+            end,
+            employeeId: resourceId
+        });
+    };
+
+    const [editingVisit, setEditingVisit] = useState(null);
+
+    // Funkcja otwierająca modal po kliknięciu w event
+    const handleSelectEvent = (event) => {
+        setEditingVisit(event.resource);
+    };
+
+    // Funkcja zamykająca modal
+    const closeEditingVisit = () => {
+        setEditingVisit(null);
+    };
+
 
 
     return (
@@ -180,12 +204,16 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
                     timeslots={1}
                     min={createDayTime(MIN_HOUR)}
                     max={createDayTime(MAX_HOUR)}
+                    selectable
+                    resizable
+                    onSelectSlot={handleSelectSlot}
+
                     formats={{
                         timeGutterFormat: "HH:mm",
                         eventTimeRangeFormat: ({ start, end }) =>
                             `${format(start, "HH:mm")} - ${format(end, "HH:mm")}`,
                     }}
-                    style={{ height: "70vh", marginBottom: "20px", borderRadius: 8 }}
+                    style={{ height: "80vh", marginBottom: "20px", borderRadius: 8 }}
 
                     dayPropGetter={(dateValue) => {
                         const isToday =
@@ -221,7 +249,6 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
                         next: "→",
                     }}
 
-                    selectable
                     onSelectEvent={handleSelectEvent}
 
                     eventPropGetter={(event) => {
@@ -321,74 +348,188 @@ function DayCalendar({ onSelectPatient, onSelectEmployee }) {
                         }
                     }}
                 />
+                {newVisitData && (
+                    <div style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 9999
+                    }}>
+                        <div style={{
+                            background: "white",
+                            padding: "20px",
+                            borderRadius: "10px",
+                            minWidth: "400px",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                        }}>
+                            <VisitForm
+                                date={new Date(newVisitData.start)}
+                                initialData={newVisitData}
+                                onVisitAdded={() => {
+                                    setNewVisitData(null);
+                                    fetchVisits();
+                                }}
+                                onCancel={() => setNewVisitData(null)}
+                            />
+                        </div>
+                    </div>
+                )}
+
             </div>
 
-            {selectedEvent && (
-                <div style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "8px" }}>
-                    <h3>Szczegóły wizyty</h3>
-                    <p>
-                        <strong>Pacjent:</strong>
-                        <span
-                            onClick={() => onSelectPatient(selectedEvent.patient.id)}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.color = "#0056b3";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.color = "black";
-                            }}
-                            style={{
-                                cursor: "pointer",
-                            }}
-                        >
-                        {selectedEvent.patient.firstName} {selectedEvent.patient.lastName}
-                    </span></p>
-                    <p><strong>Typ wizyty:</strong> {selectedEvent.visitType?.value}</p>
-                    <p>
-                        <strong>Lekarz:</strong>
-                        <span
-                            onClick={() => onSelectEmployee(selectedEvent.employee.id)}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.color = "#0056b3";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.color = "black";
-                            }}
-                            style={{
-                                cursor: "pointer",
-                            }}
-                        >
-                            {selectedEvent.employee?.firstName} {selectedEvent.employee?.lastName}
-                        </span></p>
-                    <p><strong>Godzina:</strong> {format(new Date(selectedEvent.startTime), "HH:mm")} - {format(new Date(selectedEvent.endTime), "HH:mm")}</p>
-                    <p><strong>Komentarz:</strong> {selectedEvent.comment || "—"}</p>
-                    <div style={{ marginTop: "auto", textAlign: "right" }}>
-                        <button
-                            style={{
-                                padding: "6px 12px",
-                                backgroundColor: "#e53935",
-                                color: "white",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                            }}
-                            onClick={async () => {
-                                const confirmed = window.confirm("Czy na pewno chcesz usunąć tę wizytę?");
-                                if (!confirmed) return;
+            {editingVisit && !editingVisit.isEditing && (
+                <div
+                    onClick={closeEditingVisit}
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 9999,
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: "white",
+                            padding: "20px",
+                            borderRadius: "10px",
+                            minWidth: "400px",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        }}
+                    >
+                        <h3>Szczegóły wizyty</h3>
+                        <p>
+                            <strong>Pacjent: </strong>
+                            <span
+                                onClick={() => onSelectPatient(editingVisit.patient.id)}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = "#0056b3"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = "black"; }}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {editingVisit.patient.firstName} {editingVisit.patient.lastName}
+                            </span>
+                        </p>
+                        <p><strong>Typ wizyty:</strong> {editingVisit.visitType?.value}</p>
+                        <p>
+                            <strong>Lekarz: </strong>
+                            <span
+                                onClick={() => onSelectEmployee(editingVisit.employee.id)}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = "#0056b3"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = "black"; }}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {editingVisit.employee?.firstName} {editingVisit.employee?.lastName}
+                            </span>
+                        </p>
+                        <p>
+                            <strong>Godzina:</strong>{" "}
+                            {format(new Date(editingVisit.startTime), "HH:mm")} - {format(new Date(editingVisit.endTime), "HH:mm")}
+                        </p>
+                        <p><strong>Komentarz:</strong> {editingVisit.comment || "—"}</p>
 
-                                try {
-                                    const res = await fetch(`https://localhost:7193/api/visits/${selectedEvent.id}`, {
-                                        method: "DELETE",
-                                    });
-                                    if (!res.ok) throw new Error("Nie udało się usunąć wizyty");
+                        <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                            <button
+                                onClick={closeEditingVisit}
+                                style={{
+                                    padding: "6px 12px",
+                                    backgroundColor: "#ccc",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Anuluj
+                            </button>
 
-                                    setSelectedEvent(null);
-                                    await fetchVisits();
-                                } catch (err) {
-                                    alert("Błąd podczas usuwania wizyty: " + err.message);
-                                }
+                            <button
+                                onClick={() => setEditingVisit({ ...editingVisit, isEditing: true })}
+                                style={{
+                                    padding: "6px 12px",
+                                    backgroundColor: "#1976d2",
+                                    color: "white",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Edytuj
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    const confirmed = window.confirm("Czy na pewno chcesz usunąć tę wizytę?");
+                                    if (!confirmed) return;
+                                    try {
+                                        const res = await fetch(`https://localhost:7193/api/visits/${editingVisit.id}`, {
+                                            method: "DELETE",
+                                        });
+                                        if (!res.ok) throw new Error("Nie udało się usunąć wizyty");
+                                        closeEditingVisit();
+                                        await fetchVisits();
+                                    } catch (err) {
+                                        alert("Błąd podczas usuwania wizyty: " + err.message);
+                                    }
+                                }}
+                                style={{
+                                    padding: "6px 12px",
+                                    backgroundColor: "#e53935",
+                                    color: "white",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Usuń
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingVisit && editingVisit.isEditing && (
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.4)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    zIndex: 9999
+                }}>
+                    <div style={{
+                        background: "white",
+                        padding: "20px",
+                        borderRadius: "10px",
+                        minWidth: "400px",
+                        maxHeight: "90vh",
+                        overflowY: "auto",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                    }}>
+                        <VisitForm
+                            visitToEdit={editingVisit}
+                            onVisitAdded={() => {
+                                setEditingVisit(null);
+                                fetchVisits();
                             }}
-                        >
-                        Usuń wizytę
-                        </button>
+                            onCancel={() => setEditingVisit(null)}
+                            date={new Date(editingVisit.startTime)}
+                        />
                     </div>
                 </div>
             )}

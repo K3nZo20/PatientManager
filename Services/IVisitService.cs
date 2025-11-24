@@ -11,8 +11,8 @@ namespace PatientManager.Api.Services
         Task<IEnumerable<Visit>> GetVisitsByEmployeeAndDate(List<Guid> employeesId, DateTime date);
         Task<IEnumerable<Visit>> GetAllVisitsAsync();
         Task<Visit?> GetByIdAsync(Guid id);
-        Task<Visit> CreateAsync(Visit visit);
-        Task<bool> UpdateAsync(Guid id, Visit visit);
+        Task<ServiceResult<Visit>> CreateAsync(Visit visit);
+        Task<ServiceResult<bool>> UpdateAsync(Guid id, Visit visit);
         Task<bool> DeleteAsync(Guid id);
     }
 }

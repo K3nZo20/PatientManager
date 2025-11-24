@@ -79,25 +79,27 @@ namespace PatientManager.Api.Services
                 .ToListAsync();
         }
 
-        public async Task<Visit> CreateAsync(Visit visit)
+        public async Task<ServiceResult<Visit>> CreateAsync(Visit visit)
         {
             if (!_context.Patients.Any(p => p.Id == visit.PatientId))
-                throw new Exception("Pacjent nie istnieje.");
+                return ServiceResult<Visit>.Fail("Pacjent nie istnieje.");
 
             if (!_context.Employees.Any(e => e.Id == visit.EmployeeId))
-                throw new Exception("Pracownik nie istnieje.");
+                return ServiceResult<Visit>.Fail("Pracownik nie istnieje.");
 
-            bool overlap = await _context.Visits.AnyAsync(v =>
-                    v.EmployeeId == visit.EmployeeId &&
-                    v.StartTime == visit.StartTime);
+            bool overlap = await CheckOverlapAsync(
+                visit.EmployeeId,
+                visit.StartTime,
+                visit.EndTime
+            );
 
             if (overlap)
-                throw new Exception("Pracownik ma już wizytę w tym terminie.");
+                return ServiceResult<Visit>.Fail("Pracownik ma już wizytę w tym terminie.");
 
             visit.Id = Guid.NewGuid();
             _context.Visits.Add(visit);
             await _context.SaveChangesAsync();
-            return visit;
+            return ServiceResult<Visit>.Ok(visit);
         }
 
         public async Task<bool> DeleteAsync(Guid id)
@@ -119,11 +121,21 @@ namespace PatientManager.Api.Services
                 .FirstOrDefaultAsync(v => v.Id == id);
 
         }
-
-        public async Task<bool> UpdateAsync(Guid id, Visit visit)
+        public async Task<ServiceResult<bool>> UpdateAsync(Guid id, Visit visit)
         {
             var existing = await _context.Visits.FindAsync(id);
-            if (existing == null) return false;
+            if (existing == null)
+                return ServiceResult<bool>.Fail("Wizyta nie istnieje.");
+
+            bool overlap = await CheckOverlapAsync(
+                visit.EmployeeId,
+                visit.StartTime,
+                visit.EndTime,
+                id
+            );
+
+            if (overlap)
+                return ServiceResult<bool>.Fail("Pracownik ma już wizytę w tym terminie.");
 
             existing.StartTime = visit.StartTime;
             existing.EndTime = visit.EndTime;
@@ -133,8 +145,18 @@ namespace PatientManager.Api.Services
             existing.PatientId = visit.PatientId;
 
             await _context.SaveChangesAsync();
-            return true;
+
+            return ServiceResult<bool>.Ok(true);
         }
 
+        private async Task<bool> CheckOverlapAsync(Guid employeeId, DateTime start, DateTime end, Guid? excludeVisitId = null)
+        {
+            return await _context.Visits.AnyAsync(v =>
+                v.EmployeeId == employeeId &&
+                (excludeVisitId == null || v.Id != excludeVisitId) &&
+                v.StartTime < end &&
+                v.EndTime > start
+            );
+        }
     }
 }

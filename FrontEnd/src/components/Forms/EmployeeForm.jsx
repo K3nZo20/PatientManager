@@ -45,7 +45,11 @@ function EmployeeForm({ onEmployeeAdded, onCancel }) {
                 <input name="phoneNumber" placeholder="Telefon" maxLength="9" onChange={handleChange} required /><br /><br />
 
                 <button type="submit">💾 Zapisz</button>
-                <button type="button" onClick={onCancel} style={{ marginLeft: "10px" }}>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    style={{ marginLeft: "10px" }}
+                >
                     ❌ Anuluj
                 </button>
             </form>

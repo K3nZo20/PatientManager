@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import PatientForm from "./PatientForm";
 
-function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
+function VisitForm({ date, onVisitAdded, onCancel, visitToEdit, initialData }) {
     const [patients, setPatients] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [types, setTypes] = useState([]);
@@ -17,7 +17,12 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
         comment: "",
     });
 
-    const formattedDate = date.toISOString().split("T")[0];
+    const formattedDate = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
+    ].join("-");
+
 
     useEffect(() => {
         fetch(`https://localhost:7193/api/patients?sortBy=lastName&page=1&pageSize=0`)
@@ -35,23 +40,46 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
         fetch(`https://localhost:7193/api/visittypes`)
             .then((res) => res.text())
             .then((text) => (text ? JSON.parse(text) : []))
-            .then(setTypes)
+            .then((data) => setTypes(data.items))
             .catch(console.error);
     }, []);
 
     useEffect(() => {
         if (visitToEdit) {
+
+            const start = new Date(visitToEdit.startTime);
+            const end = new Date(visitToEdit.endTime);
+            const diffMinutes = (end - start) / (1000 * 60);
+
             setForm({
                 patientId: visitToEdit.patientId,
                 employeeId: visitToEdit.employeeId,
                 visitTypeId: visitToEdit.visitTypeId,
                 startTime: visitToEdit.startTime.substring(11, 16),
                 endTime: visitToEdit.endTime.substring(11, 16),
-                duration: "",
+                duration: diffMinutes.toString(),
                 comment: visitToEdit.comment || ""
             });
         }
     }, [visitToEdit]);
+
+    useEffect(() => {
+        if (initialData) {
+            const start = new Date(initialData.start);
+            const end = new Date(initialData.end);
+
+            const formatHM = (d) =>
+                `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+            setForm(f => ({
+                ...f,
+                employeeId: initialData.employeeId || "",
+                startTime: formatHM(start),
+                endTime: formatHM(end),
+                duration: ((end - start) / (1000 * 60)).toString()
+            }));
+        }
+    }, [initialData]);
 
     const handleAddVisit = async (e) => {
         e.preventDefault();
@@ -72,7 +100,10 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
                 }),
             });
 
-            if (!res.ok) throw new Error("Błąd podczas zapisywania wizyty");
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.message || "Nie można utworzyć wizyty");
+            }
             alert("Wizyta została dodana ✅");
             setForm({
                 patientId: "",
@@ -143,15 +174,17 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
                 </button>
 
                 {showAddPatient && (
-                    <div style={{ marginTop: "10px", border: "1px solid #ccc", padding: "10px", borderRadius: "8px" }}>
-                        <PatientForm
-                            onPatientAdded={(addedPatient) => {
-                                setPatients(prev => [...prev, addedPatient]);
-                                setForm(f => ({ ...f, patientId: addedPatient.id }));
-                                setShowAddPatient(false);
-                            }}
-                            onCancel={() => setShowAddPatient(false)}
-                        />
+                    <div style={modalStyle}>
+                        <div style={modalContentStyle}>
+                            <PatientForm
+                                onPatientAdded={(added) => {
+                                    setPatients(p => [...p, added]);
+                                    setForm(f => ({ ...f, patientId: added.id }));
+                                    setShowAddPatient(false);
+                                }}
+                                onCancel={() => setShowAddPatient(false)}
+                            />
+                        </div>
                     </div>
                 )}
 
@@ -272,8 +305,9 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
                     <button
                         type="button"
                         onClick={() => onCancel?.()}
+                        style={{ marginLeft: "10px" }}
                     >
-                        ✖ Anuluj
+                        ❌ Anuluj
                     </button>
                 </div>
 
@@ -281,5 +315,26 @@ function VisitForm({ date, onVisitAdded, onCancel, visitToEdit }) {
         </div>
     );
 }
+
+const modalStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,.4)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999
+};
+
+const modalContentStyle = {
+    background: "white",
+    padding: "20px",
+    borderRadius: "10px",
+    minWidth: "400px"
+};
+
 
 export default VisitForm;

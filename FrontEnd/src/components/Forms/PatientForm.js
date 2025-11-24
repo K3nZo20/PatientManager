@@ -13,7 +13,9 @@ function PatientForm({ onPatientAdded, onCancel }) {
         setPatient({ ...patient, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
         try {
             const res = await fetch("https://localhost:7193/api/patients", {
                 method: "POST",
@@ -21,7 +23,12 @@ function PatientForm({ onPatientAdded, onCancel }) {
                 body: JSON.stringify(patient),
             });
 
-            if (!res.ok) throw new Error("Błąd zapisu pacjenta");
+            if (!res.ok)
+            {
+                const error = await res.json();
+                alert(error.message);
+                return;
+            };
 
             const added = await res.json();
 
@@ -29,7 +36,7 @@ function PatientForm({ onPatientAdded, onCancel }) {
 
             if (onPatientAdded) onPatientAdded(added);
         } catch (err) {
-            console.error("Błąd dodawania pacjenta:", err);
+            console.error("Błąd dodawania pacjenta:", err.message);
             alert("Nie udało się dodać pacjenta!");
         }
     };
@@ -38,49 +45,53 @@ function PatientForm({ onPatientAdded, onCancel }) {
         <div style={{ padding: "20px" }}>
             <h2>Dodaj pacjenta</h2>
 
-            <input
-                name="firstName"
-                placeholder="Imię"
-                onChange={handleChange}
-                required
-            /><br />
+                <input
+                    name="firstName"
+                    placeholder="Imię"
+                    onChange={handleChange}
+                    required
+                /><br />
 
-            <input
-                name="lastName"
-                placeholder="Nazwisko"
-                onChange={handleChange}
-                required
-            /><br />
+                <input
+                    name="lastName"
+                    placeholder="Nazwisko"
+                    onChange={handleChange}
+                    required
+                /><br />
 
-            <input
-                name="pesel"
-                placeholder="Pesel"
-                maxLength="11"
-                minLength="11"
-                onChange={handleChange}
-                required
-            /><br />
+                <input
+                    name="pesel"
+                    placeholder="Pesel"
+                    maxLength="11"
+                    minLength="11"
+                    onChange={handleChange}
+                    required
+                /><br />
 
-            <input
-                name="dateOfBirth"
-                type="date"
-                onChange={handleChange}
-                required
-            /><br />
+                <input
+                    name="dateOfBirth"
+                    type="date"
+                    onChange={handleChange}
+                    required
+                /><br />
 
-            <input
-                name="phoneNumber"
-                maxLength="9"
-                minLength="9"
-                placeholder="Telefon"
-                onChange={handleChange}
-                required
-            /><br /><br />
+                <input
+                    name="phoneNumber"
+                    maxLength="9"
+                    minLength="9"
+                    placeholder="Telefon"
+                    onChange={handleChange}
+                    required
+                /><br /><br />
 
             <button type="button" onClick={handleSubmit}>💾 Zapisz</button>
-            <button type="button" onClick={onCancel} style={{ marginLeft: "10px" }}>
-                ❌ Anuluj
-            </button>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    style={{ marginLeft: "10px" }}
+                >
+                    ❌ Anuluj
+                </button>
         </div>
     );
 }
