@@ -41,15 +41,20 @@ namespace PatientManager.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePatient([FromBody] Patient patient)
         {
-            var created = await _service.CreateAsync(patient);
-            return CreatedAtAction(nameof(GetPatient), new { id = created.Id }, created);
+            var result = await _service.CreateAsync(patient);
+
+            if (!result.Success)
+                return BadRequest(new { message = result.Error });
+
+            return CreatedAtAction(nameof(GetPatient), new { id = result.Data!.Id }, result.Data);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePatient(Guid id, [FromBody] Patient patient)
         {
-            var updated = await _service.UpdateAsync(id, patient);
-            if (!updated) return NotFound();
+            var result = await _service.UpdateAsync(id, patient);
+            if (!result.Success)
+                return BadRequest(new { message = result.Error });
             return NoContent();
         }
 

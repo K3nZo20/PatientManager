@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using PatientManager.Api.Entities;
 using PatientManager.Api.Generator;
 using PatientManager.Api.Services;
-using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +17,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesService>();
+builder.Services.AddScoped<IVisitTypeService, VisitTypeService>();
 
 builder.Services.AddCors(options =>
 {
@@ -35,7 +35,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -54,16 +53,17 @@ using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetService<AppDbContext>();
 var employees = dbContext.Employees.ToList();
 
-if (!employees.Any())
-{
-    DataGenerator.GenerateEmployee(dbContext, 10);
-}
+// if you want base to test uncoment
+//if (!employees.Any())
+//{
+//    DataGenerator.GenerateEmployee(dbContext, 10);
+//}
 
-var patients = dbContext.Patients.ToList();
-if (!patients.Any())
-{
-    DataGenerator.GeneratePatients(dbContext, 100);
-}
+//var patients = dbContext.Patients.ToList();
+//if (!patients.Any())
+//{
+//    DataGenerator.GeneratePatients(dbContext, 100);
+//}
 
 app.Run();
 

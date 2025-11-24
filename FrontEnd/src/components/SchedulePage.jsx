@@ -119,7 +119,16 @@ function SchedulePage({ onSelectPatient, onSelectEmployee }) {
                         localizer={localizer}
                         events={[]}
                         date={selectedDate}
+                        formats={{
+                            monthHeaderFormat: (date) => format(date, "LLLL yyyy", { locale: pl })
+                        }}
                         onNavigate={(date) => setSelectedDate(date)}
+                        messages={{
+                            day: "Dzień",
+                            today: "Dziś",
+                            previous: "←",
+                            next: "→",
+                        }}
                         views={["month"]}
                         style={{ height: "400px", width: "100%" }}
                         onSelectSlot={({ start }) => setSelectedDate(start)}

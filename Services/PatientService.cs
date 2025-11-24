@@ -74,18 +74,21 @@ namespace PatientManager.Api.Services
             return patient;
         }
 
-        public async Task<Patient> CreateAsync(Patient patient)
+        public async Task<ServiceResult<Patient>> CreateAsync(Patient patient)
         {
             patient.Id = Guid.NewGuid();
+            if (await _context.Patients.AnyAsync(p => p.Pesel == patient.Pesel))
+                return ServiceResult<Patient>.Fail("Pacjent z takim peselem już istenieje.");
+
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
-            return patient;
+            return ServiceResult<Patient>.Ok(patient);
         }
 
-        public async Task<bool> UpdateAsync(Guid id, Patient patient)
+        public async Task<ServiceResult<Patient>> UpdateAsync(Guid id, Patient patient)
         {
             var findingPatient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == id);
-            if (findingPatient == null) return false;
+            if (findingPatient == null) return ServiceResult<Patient>.Fail("Nie można znaleźć pacjenta");
 
             findingPatient.FirstName = patient.FirstName;
             findingPatient.LastName = patient.LastName;
@@ -95,8 +98,10 @@ namespace PatientManager.Api.Services
             findingPatient.Visits = patient.Visits;
             findingPatient.PatientTags = patient.PatientTags;
 
+            if (await _context.Patients.AnyAsync(p => p.Pesel == patient.Pesel))
+                return ServiceResult<Patient>.Fail("Pacjent z takim peselem już istenieje.");
             await _context.SaveChangesAsync();
-            return true;
+            return ServiceResult<Patient>.Ok(patient);
         }
 
         public async Task<bool> DeleteAsync(Guid id)

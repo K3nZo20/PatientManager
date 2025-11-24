@@ -98,9 +98,9 @@ function PatientList({ onSelectPatient }) {
                         boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
                     }}>
                         <PatientForm
-                            onPatientAdded={(addedPatient) => {
-                                setPatients((prev) => [...prev, addedPatient]);
+                            onPatientAdded={() => {
                                 setShowForm(false);
+                                fetchPatients();
                             }}
                             onCancel={() => setShowForm(false)}
                         />

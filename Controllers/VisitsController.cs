@@ -55,35 +55,35 @@ namespace PatientManager.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateVisit([FromBody] VisitCreateDto dto)
         {
-            try
+            var visit = new Visit
             {
-                var visit = new Visit
-                {
-                    Id = Guid.NewGuid(),
-                    PatientId = dto.PatientId,
-                    EmployeeId = dto.EmployeeId,
-                    VisitTypeId = dto.VisitTypeId,
-                    StartTime = dto.StartTime,
-                    EndTime = dto.EndTime,
-                    Comment = dto.Comment
-                };
+                PatientId = dto.PatientId,
+                EmployeeId = dto.EmployeeId,
+                VisitTypeId = dto.VisitTypeId,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Comment = dto.Comment
+            };
 
-                var created = await _service.CreateAsync(visit);
-                return CreatedAtAction(nameof(GetVisitById), new { id = created.Id }, created);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _service.CreateAsync(visit);
+
+            if (!result.Success)
+                return BadRequest(new { message = result.Error });
+
+            return CreatedAtAction(nameof(GetVisitById), new { id = result.Data!.Id }, result.Data);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVisit(Guid id, [FromBody] Visit visit)
         {
-            var updated = await _service.UpdateAsync(id, visit);
-            if (!updated) return NotFound();
+            var result = await _service.UpdateAsync(id, visit);
+
+            if (!result.Success)
+                return BadRequest(new { message = result.Error });
+
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVisit(Guid id)
